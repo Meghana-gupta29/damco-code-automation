@@ -66,7 +66,18 @@ def build_summary(run, cfg: dict) -> dict:
 
     pass_rate = round(100 * passed / total, 1) if total else 0.0
     verdict, reasons = _verdict(pass_rate, failures, skipped, defects)
+    change, new_cases = None, []
+    if run.path("pr_context.json").exists():
+        pc = run.read_json("pr_context.json")
+        delta = run.read_json("plan_delta.json") if run.path("plan_delta.json").exists() else {}
+        change = {"title": pc["title"], "url": pc["url"], "branch": pc["branch"],
+                  "changed_files": pc["changed_files"], "impact": delta.get("impact_summary", ""),
+                  "risk": delta.get("risk", "")}
+        outcome = {r["tc"]: r["outcome"] for r in rows}
+        new_cases = [{"id": c["id"], "title": c["title"], "layer": c["layer"], "module": c["module"],
+                      "outcome": outcome.get(c["id"], "not run")} for c in cases.values() if c.get("origin")]
     return {
+        "change": change, "new_cases": new_cases,
         "run_id": run.id, "label": meta.get("label", ""), "when": meta.get("started", ""),
         "app_git": meta.get("app_git", ""), "suites": suites,
         "totals": {"total": total, "passed": passed, "failed": failed, "skipped": skipped,
@@ -128,7 +139,8 @@ def _trend(history: list[dict]) -> str:
         height = max(6, int(pr * 0.8))
         cells.append(
             f'<td style="vertical-align:bottom"><div style="width:46px;height:{height}px;background:{color};'
-            f'margin:0 auto"></div><div>{pr}%</div><div class="muted">{_e(h["verdict"])}</div>'
+            f'margin:0 auto"></div><div>{pr}%</div><div class="muted">{h["totals"]["total"]} tests</div>'
+            f'<div class="muted">{_e(h["verdict"])}</div>'
             f'<div class="muted">{_e(h["label"] or h["run_id"][4:])}</div></td>')
     return f'<table class="bar"><tr>{"".join(cells)}</tr></table>'
 
@@ -164,6 +176,20 @@ def render_report(s: dict, history: list[dict], title="QA Release Readiness Repo
         f"<tr><td>{_e(h['run_id'])}</td><td>{_e(h['label'])}</td><td>{h['totals']['passed']}/{h['totals']['total']}</td>"
         f"<td>{h['totals']['pass_rate']}%</td><td>{_e(h['verdict'])}</td></tr>" for h in history)
     label = (" &middot; " + _e(s["label"])) if s["label"] else ""
+    change_html = ""
+    if s.get("change"):
+        ch = s["change"]
+        nc = "".join(f"<tr><td>{_e(c['id'])}</td><td>{_e(c['layer'])}</td><td>{_e(c['title'])}</td>"
+                     f"<td><code>{_e(c['module'])}</code></td>"
+                     f"<td class='{'pass' if c['outcome'] == 'passed' else 'fail'}'>{_e(c['outcome'])}</td></tr>"
+                     for c in s["new_cases"])
+        files = ", ".join(f"<code>{_e(f)}</code>" for f in ch["changed_files"])
+        change_html = (f"<h2>Change under test (developer PR)</h2><div class='card'><b>{_e(ch['title'])}</b><br>"
+                       f"<span class='muted'>{_e(ch['url'])} &middot; branch {_e(ch['branch'])} &middot; "
+                       f"risk: {_e(ch['risk'])}</span><p>{_e(ch['impact'])}</p>Changed files: {files}</div>"
+                       "<h2>New test cases added for this change</h2>"
+                       "<table><tr><th>ID</th><th>Layer</th><th>Title</th><th>Module</th><th>Result</th></tr>"
+                       f"{nc}</table>")
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>{_e(title)}</title>
 <style>{CSS}</style></head><body><div class="wrap">
 <h1>{_e(title)}</h1>
@@ -171,6 +197,7 @@ def render_report(s: dict, history: list[dict], title="QA Release Readiness Repo
 <div class="verdict {vcls}">Release verdict: <b>{_e(s['verdict'])}</b><ul>{reasons}</ul></div>
 <div class="card"><b>{t['passed']}</b> passed &middot; <b>{t['failed']}</b> failed &middot; <b>{t['skipped']}</b> skipped
  of <b>{t['total']}</b> tests &middot; pass rate <b>{t['pass_rate']}%</b></div>
+{change_html}
 <h2>Execution summary by suite</h2>
 <table><tr><th>Suite</th><th>Total</th><th>Passed</th><th>Failed</th><th>Skipped</th><th>Duration</th></tr>{suite_rows}</table>
 <h2>Modules covered</h2>

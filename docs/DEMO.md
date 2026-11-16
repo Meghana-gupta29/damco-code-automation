@@ -65,6 +65,24 @@ qa email
 start dashboard\index.html  # trend: Go -> No-Go -> Go, defects Closed
 ```
 
+## Scene 6: a developer's PR keeps the automation up to date (48 -> 50 tests)
+```powershell
+qa feature apply --pr       # plays the developer: branch feature/item-search + a real PR on your fork (prints the PR number)
+qa pr-sync --pr 1           # QA agent reads the PR: impact analysis, existing cases at risk, proposes 1 API + 1 UI case
+                            # (use the PR number printed above; checks the PR branch out in the app repo)
+```
+Review `runs\<latest>\test_cases.json` (the two new cases TC-050/TC-051), then approve (Gate 1 again):
+```powershell
+qa run                      # (optional) shows the gate refusing: plan not approved
+qa approve plan
+qa generate all --new-only  # writes tests ONLY for the new cases, in new files; existing tests untouched
+qa app deploy               # deploy the PR branch
+qa run --label pr-feature   # 50 tests (32 API + 18 UI); report shows change under test + new cases
+qa email
+start dashboard\index.html
+```
+No GitHub? Use a local branch instead: `qa feature apply` then `qa pr-sync --branch feature/item-search`.
+
 ## After recording
 ```powershell
 qa reset-demo --deploy

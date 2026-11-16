@@ -1,0 +1,6 @@
+{
+  "branch": "feature/item-search",
+  "commit_message": "feat(items): search items by title",
+  "pr_title": "feat(items): search items by title",
+  "pr_body": "Adds an optional case-insensitive `search` query parameter to `GET /api/v1/items/` and a search box on the Items page that filters the list through the API.\n\n- Backend: `backend/app/api/routes/items.py` (`read_items`) applies a title filter (`icontains`, autoescaped) combined with the existing owner filter.\n- Frontend: `frontend/src/routes/_layout/items.tsx` adds a `data-testid=\"item-search\"` input; empty-result state says \"No items match your search\".\n- Client type updated: `frontend/src/client/types.gen.ts`."
+}

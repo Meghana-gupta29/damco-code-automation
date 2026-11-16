@@ -37,17 +37,29 @@ def cmd_approve(cfg, args):
 
 
 def cmd_generate(cfg, args):
-    from .generate import generate_api, generate_ui
+    from .generate import existing_tc_ids, generate_api, generate_ui
     run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
     run.require_approved_plan()  # Gate 1 enforced in code
     cases = run.read_json("test_cases.json")
-    if args.suite == "api":
-        files = generate_api(get_provider(cfg), cfg, cases)
-    else:
-        files = generate_ui(get_provider(cfg), cfg, cases)
-    print("Wrote:")
-    for f in files:
-        print("  " + f)
+    llm = get_provider(cfg)
+    only, tag = None, None
+    if args.new_only:  # tests only for approved cases that have no test yet (PR-driven flow)
+        have = existing_tc_ids(cfg["_root"])
+        only = {c["id"] for c in cases if c["id"] not in have}
+        tag = run.read_json("pr_context.json")["tag"] if run.path("pr_context.json").exists() else "new"
+        print(f"New cases without tests: {', '.join(sorted(only)) or 'none'}")
+    for suite, fn, path in (("api", generate_api, f"generated/api/test_{tag}.py"),
+                            ("ui", generate_ui, f"generated/ui/{tag}.spec.ts")):
+        if args.suite not in (suite, "all"):
+            continue
+        layer = suite.upper()
+        if only is not None and not any(c["id"] in only and c["layer"] == layer for c in cases):
+            print(f"No new {layer} cases; skipping.")
+            continue
+        files = fn(llm, cfg, cases, only, path if only is not None else None)
+        print("Wrote:")
+        for f in files:
+            print("  " + f)
 
 
 def _app_git(repo) -> str:
@@ -110,7 +122,8 @@ def main():
     ap.add_argument("what", choices=["plan"])
     ap.set_defaults(fn=cmd_approve)
     g = sub.add_parser("generate")
-    g.add_argument("suite", choices=["api", "ui"])
+    g.add_argument("suite", choices=["api", "ui", "all"])
+    g.add_argument("--new-only", action="store_true", help="only write tests for approved cases lacking one")
     g.set_defaults(fn=cmd_generate)
     rp = sub.add_parser("run")
     rp.add_argument("--suite", choices=["api", "ui"])
@@ -137,6 +150,15 @@ def main():
     ap2 = sub.add_parser("app")
     ap2.add_argument("action", choices=["deploy", "status"])
     ap2.set_defaults(fn=lambda cfg, a: appctl.deploy(cfg) if a.action == "deploy" else appctl.status(cfg))
+    fa = sub.add_parser("feature", help="play the developer: feature branch (+ real PR on the fork)")
+    fa.add_argument("action", choices=["apply"])
+    fa.add_argument("--pr", action="store_true", help="push the branch and open a pull request")
+    fa.set_defaults(fn=lambda cfg, a: __import__("qa.prsync", fromlist=["x"]).feature_apply(cfg, a.pr))
+    ps = sub.add_parser("pr-sync", help="QA agent reads a PR, assesses impact, proposes new test cases")
+    ps.add_argument("--pr", type=int)
+    ps.add_argument("--branch")
+    ps.add_argument("--max-new", type=int, default=1, help="max new cases per layer")
+    ps.set_defaults(fn=lambda cfg, a: __import__("qa.prsync", fromlist=["x"]).pr_sync(cfg, a.pr, a.branch, a.max_new))
     rd = sub.add_parser("reset-demo", help="clear runs/mailbox, restore tests, app back to base branch")
     rd.add_argument("--deploy", action="store_true")
     rd.set_defaults(fn=lambda cfg, a: __import__("qa.demo", fromlist=["x"]).reset_demo(cfg, a.deploy))

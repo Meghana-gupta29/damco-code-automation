@@ -1,0 +1,173 @@
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..53b02de 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -12,34 +12,32 @@ router = APIRouter(prefix="/items", tags=["items"])
+ 
+ @router.get("/", response_model=ItemsPublic)
+ def read_items(
+-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
++    session: SessionDep,
++    current_user: CurrentUser,
++    skip: int = 0,
++    limit: int = 100,
++    search: str | None = None,
+ ) -> Any:
+     """
+-    Retrieve items.
++    Retrieve items. Optionally filter by a case-insensitive title match (`search`).
+     """
+ 
+-    if current_user.is_superuser:
+-        count_statement = select(func.count()).select_from(Item)
+-        count = session.exec(count_statement).one()
+-        statement = (
+-            select(Item).order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+-        )
+-        items = session.exec(statement).all()
+-    else:
+-        count_statement = (
+-            select(func.count())
+-            .select_from(Item)
+-            .where(Item.owner_id == current_user.id)
+-        )
+-        count = session.exec(count_statement).one()
+-        statement = (
+-            select(Item)
+-            .where(Item.owner_id == current_user.id)
+-            .order_by(col(Item.created_at).desc())
+-            .offset(skip)
+-            .limit(limit)
+-        )
+-        items = session.exec(statement).all()
++    filters = []
++    if not current_user.is_superuser:
++        filters.append(Item.owner_id == current_user.id)
++    if search:
++        filters.append(col(Item.title).icontains(search, autoescape=True))
++
++    count_statement = select(func.count()).select_from(Item).where(*filters)
++    count = session.exec(count_statement).one()
++    statement = (
++        select(Item)
++        .where(*filters)
++        .order_by(col(Item.created_at).desc())
++        .offset(skip)
++        .limit(limit)
++    )
++    items = session.exec(statement).all()
+ 
+     items_public = [ItemPublic.model_validate(item) for item in items]
+     return ItemsPublic(data=items_public, count=count)
+diff --git a/frontend/src/client/types.gen.ts b/frontend/src/client/types.gen.ts
+index 6252d88..7cccee7 100644
+--- a/frontend/src/client/types.gen.ts
++++ b/frontend/src/client/types.gen.ts
+@@ -784,6 +784,10 @@ export type itemsReadItemsData = {
+          * Limit
+          */
+         limit?: number;
++        /**
++         * Search
++         */
++        search?: string | null;
+     };
+     url: '/api/v1/items/';
+ };
+diff --git a/frontend/src/routes/_layout/items.tsx b/frontend/src/routes/_layout/items.tsx
+index 0dbb97f..039ebc2 100644
+--- a/frontend/src/routes/_layout/items.tsx
++++ b/frontend/src/routes/_layout/items.tsx
+@@ -1,19 +1,24 @@
+ import { useSuspenseQuery } from "@tanstack/react-query"
+ import { createFileRoute } from "@tanstack/react-router"
+ import { Search } from "lucide-react"
+-import { Suspense } from "react"
++import { Suspense, useState } from "react"
+ 
+ import { ItemsService } from "@/client"
+ import { DataTable } from "@/components/Common/DataTable"
+ import AddItem from "@/components/Items/AddItem"
+ import { columns } from "@/components/Items/columns"
+ import PendingItems from "@/components/Pending/PendingItems"
++import { Input } from "@/components/ui/input"
+ 
+-function getItemsQueryOptions() {
++function getItemsQueryOptions(search: string) {
+   return {
+     queryFn: async () =>
+-      (await ItemsService.readItems({ query: { skip: 0, limit: 100 } })).data,
+-    queryKey: ["items"],
++      (
++        await ItemsService.readItems({
++          query: { skip: 0, limit: 100, search: search || undefined },
++        })
++      ).data,
++    queryKey: ["items", search],
+   }
+ }
+ 
+@@ -28,8 +33,8 @@ export const Route = createFileRoute("/_layout/items")({
+   }),
+ })
+ 
+-function ItemsTableContent() {
+-  const { data: items } = useSuspenseQuery(getItemsQueryOptions())
++function ItemsTableContent({ search }: { search: string }) {
++  const { data: items } = useSuspenseQuery(getItemsQueryOptions(search))
+ 
+   if (items.data.length === 0) {
+     return (
+@@ -37,8 +42,14 @@ function ItemsTableContent() {
+         <div className="rounded-full bg-muted p-4 mb-4">
+           <Search className="h-8 w-8 text-muted-foreground" />
+         </div>
+-        <h3 className="text-lg font-semibold">You don't have any items yet</h3>
+-        <p className="text-muted-foreground">Add a new item to get started</p>
++        <h3 className="text-lg font-semibold">
++          {search ? "No items match your search" : "You don't have any items yet"}
++        </h3>
++        <p className="text-muted-foreground">
++          {search
++            ? "Try a different search term"
++            : "Add a new item to get started"}
++        </p>
+       </div>
+     )
+   }
+@@ -46,15 +57,17 @@ function ItemsTableContent() {
+   return <DataTable columns={columns} data={items.data} />
+ }
+ 
+-function ItemsTable() {
++function ItemsTable({ search }: { search: string }) {
+   return (
+     <Suspense fallback={<PendingItems />}>
+-      <ItemsTableContent />
++      <ItemsTableContent search={search} />
+     </Suspense>
+   )
+ }
+ 
+ function Items() {
++  const [search, setSearch] = useState("")
++
+   return (
+     <div className="flex flex-col gap-6">
+       <div className="flex items-center justify-between">
+@@ -64,7 +77,14 @@ function Items() {
+         </div>
+         <AddItem />
+       </div>
+-      <ItemsTable />
++      <Input
++        data-testid="item-search"
++        placeholder="Search items by title..."
++        value={search}
++        onChange={(e) => setSearch(e.target.value)}
++        className="max-w-sm"
++      />
++      <ItemsTable search={search} />
+     </div>
+   )
+ }
