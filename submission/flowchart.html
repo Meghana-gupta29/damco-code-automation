@@ -152,7 +152,7 @@
           <code class="cmd">qa sabotage apply</code>
           <div class="out">Bug 1: items list no longer filters by owner (users see each other's items). Bug 2: sign-up minimum password 8 &rarr; 10.</div></li>
         <li class="step"><div class="what">Show the planted bugs</div>
-          <code class="cmd">git -C ..\full-stack-fastapi-template diff master demo/sabotage</code></li>
+          <code class="cmd">git -C ..\full-stack-fastapi-template --no-pager diff master demo/sabotage</code></li>
         <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Rebuild the running app from the sabotage branch</div>
           <code class="cmd">qa app deploy</code></li>
       </ul>

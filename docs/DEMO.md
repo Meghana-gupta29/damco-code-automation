@@ -36,7 +36,7 @@ qa email                    # then open http://localhost:8025 to show the email
 ## Scene 2: sabotage the app on a new branch
 ```powershell
 qa sabotage apply           # creates branch demo/sabotage in the app repo with 2 deliberate bugs
-git -C ..\full-stack-fastapi-template diff master demo/sabotage     # show the planted bugs
+git -C ..\full-stack-fastapi-template --no-pager diff master demo/sabotage     # show the planted bugs (--no-pager: no "(END)" prompt)
 qa app deploy               # rebuilds the backend container from the sabotage branch
 ```
 
