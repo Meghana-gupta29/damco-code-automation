@@ -1,0 +1,21 @@
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..f6bdf7e 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -26,15 +26,10 @@ def read_items(
+         )
+         items = session.exec(statement).all()
+     else:
+-        count_statement = (
+-            select(func.count())
+-            .select_from(Item)
+-            .where(Item.owner_id == current_user.id)
+-        )
++        count_statement = select(func.count()).select_from(Item)
+         count = session.exec(count_statement).one()
+         statement = (
+             select(Item)
+-            .where(Item.owner_id == current_user.id)
+             .order_by(col(Item.created_at).desc())
+             .offset(skip)
+             .limit(limit)

@@ -79,8 +79,9 @@ def cmd_run(cfg, args):
     from .runner import run_api, run_ui
     run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
     run.require_approved_plan()  # Gate 1 enforced in code
+    prev = None
     if run.has_results():
-        run = run.clone_for_execution()  # every execution is its own run (needed for the trend)
+        prev, run = run, run.clone_for_execution()  # every execution is its own run (needed for the trend)
     run.write_json("meta.json", {"label": args.label, "started": datetime.now().isoformat(timespec="seconds"),
                                  "app_git": _app_git(cfg["_target_repo"])})
     print(f"Run {run.id} {args.label}")
@@ -92,6 +93,9 @@ def cmd_run(cfg, args):
         for r in rows:
             if r["outcome"] == "failed":
                 print(f"  FAIL {r['tc']} {r['test']}")
+    if prev is not None:
+        from .fixflow import carry_defects
+        carry_defects(prev, run)  # defects whose tests now pass are closed; others stay open
     report = write_report(run, cfg)
     print(f"Verdict: {run.read_json('summary.json')['verdict']}  report: {report}")
 
@@ -114,6 +118,28 @@ def main():
     sub.add_parser("report").set_defaults(fn=cmd_report)
     sub.add_parser("email").set_defaults(fn=cmd_email)
     rp.set_defaults(fn=cmd_run)
+
+    from . import appctl
+    sub.add_parser("triage").set_defaults(fn=lambda cfg, a: __import__("qa.triage", fromlist=["x"]).triage_and_report(
+        cfg, Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])))
+    dp = sub.add_parser("decide", help="Gate 2: choose fix code or update test per defect")
+    dp.add_argument("--defect")
+    dp.add_argument("--choice", choices=["code", "test", "skip"])
+    dp.set_defaults(fn=lambda cfg, a: __import__("qa.fixflow", fromlist=["x"]).decide(
+        cfg, Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"]), a.defect, a.choice))
+    fp = sub.add_parser("fix", help="apply the decisions (shows a diff and asks to confirm)")
+    fp.add_argument("--yes", action="store_true", help="skip the confirmation prompts")
+    fp.set_defaults(fn=lambda cfg, a: __import__("qa.fixflow", fromlist=["x"]).apply_fixes(
+        cfg, Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"]), a.yes))
+    sp = sub.add_parser("sabotage")
+    sp.add_argument("action", choices=["apply", "revert"])
+    sp.set_defaults(fn=lambda cfg, a: appctl.sabotage_apply(cfg) if a.action == "apply" else appctl.sabotage_revert(cfg))
+    ap2 = sub.add_parser("app")
+    ap2.add_argument("action", choices=["deploy", "status"])
+    ap2.set_defaults(fn=lambda cfg, a: appctl.deploy(cfg) if a.action == "deploy" else appctl.status(cfg))
+    rd = sub.add_parser("reset-demo", help="clear runs/mailbox, restore tests, app back to base branch")
+    rd.add_argument("--deploy", action="store_true")
+    rd.set_defaults(fn=lambda cfg, a: __import__("qa.demo", fromlist=["x"]).reset_demo(cfg, a.deploy))
     args = p.parse_args()
     args.fn(load_config(args.config), args)
 

@@ -59,6 +59,14 @@ class Run:
             "sha256": self._hash(plan),
         })
 
+    def reapprove_amended(self, approver: str, note: str, tcs: list) -> None:
+        """Plan amended through a Gate 2 'update the test' decision: re-hash, keep an audit trail."""
+        a = json.loads(self.path("approved.json").read_text(encoding="utf-8"))
+        a.setdefault("amendments", []).append(
+            {"by": approver, "at": datetime.now().isoformat(timespec="seconds"), "note": note, "tcs": tcs})
+        a["sha256"] = self._hash(self.path("test_cases.json"))
+        self.write_json("approved.json", a)
+
     def require_approved_plan(self) -> None:
         a, plan = self.path("approved.json"), self.path("test_cases.json")
         if not a.exists():
