@@ -34,10 +34,29 @@ def cmd_approve(cfg, args):
     print("Plan approved (hash recorded).")
 
 
-def cmd_run(cfg, args):
+def cmd_generate(cfg, args):
+    from .generate import generate_api
     run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
     run.require_approved_plan()  # Gate 1 enforced in code
-    print("Gate 1 passed. (execution stage: TODO)")
+    cases = run.read_json("test_cases.json")
+    if args.suite == "api":
+        files = generate_api(get_provider(cfg), cfg, cases)
+        print("Wrote:")
+        for f in files:
+            print("  " + f)
+
+
+def cmd_run(cfg, args):
+    from .runner import run_api
+    run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
+    run.require_approved_plan()  # Gate 1 enforced in code
+    res = run_api(cfg, run)
+    rows = res["rows"]
+    n = lambda o: sum(r["outcome"] == o for r in rows)  # noqa: E731
+    print(f"API: {len(rows)} tests | passed {n('passed')} | failed {n('failed')} | skipped {n('skipped')}")
+    for r in rows:
+        if r["outcome"] == "failed":
+            print(f"  FAIL {r['tc']} {r['test']}")
 
 
 def main():
@@ -49,6 +68,9 @@ def main():
     ap = sub.add_parser("approve")
     ap.add_argument("what", choices=["plan"])
     ap.set_defaults(fn=cmd_approve)
+    g = sub.add_parser("generate")
+    g.add_argument("suite", choices=["api"])
+    g.set_defaults(fn=cmd_generate)
     sub.add_parser("run").set_defaults(fn=cmd_run)
     args = p.parse_args()
     args.fn(load_config(args.config), args)

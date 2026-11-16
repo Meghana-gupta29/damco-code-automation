@@ -20,11 +20,15 @@ llm:
 gates:
   mode: cli
 
+# Reports are sent to the local Mailpit started with the app (inbox: http://localhost:8025).
+# To use a real SMTP server later, change host/port and set tls/user/password via .env.
 email:
-  to: ccode3817@gmail.com
-  smtp_host: smtp.gmail.com
-  smtp_port: 587
-  # SMTP_USER / SMTP_PASSWORD (Gmail app password) come from .env
+  from: qa-orchestrator@example.com
+  to: qa-lead@example.com
+  smtp_host: localhost
+  smtp_port: 1025
+  tls: false
+  inbox_url: http://localhost:8025
 
 paths:
   runs_dir: runs
