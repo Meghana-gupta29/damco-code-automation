@@ -1,0 +1,692 @@
+{
+  "change": null,
+  "new_cases": [],
+  "run_id": "run-20261116-131639",
+  "label": "fixed",
+  "when": "2026-11-16T13:16:39",
+  "app_git": "bd743a0",
+  "suites": {
+    "api": {
+      "total": 31,
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0,
+      "duration_s": 8.4
+    },
+    "ui": {
+      "total": 17,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "duration_s": 24.6
+    }
+  },
+  "totals": {
+    "total": 48,
+    "passed": 48,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": 100.0
+  },
+  "modules": [
+    {
+      "module": "backend/app/api/deps.py",
+      "folder": "backend/app/api",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "tcs": [
+        "TC-011"
+      ]
+    },
+    {
+      "module": "backend/app/api/routes/items.py",
+      "folder": "backend/app/api/routes",
+      "tests": 12,
+      "passed": 12,
+      "failed": 0,
+      "tcs": [
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-015",
+        "TC-016",
+        "TC-017",
+        "TC-018",
+        "TC-019",
+        "TC-020",
+        "TC-021",
+        "TC-022",
+        "TC-049"
+      ]
+    },
+    {
+      "module": "backend/app/api/routes/login.py",
+      "folder": "backend/app/api/routes",
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "tcs": [
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009"
+      ]
+    },
+    {
+      "module": "backend/app/api/routes/users.py",
+      "folder": "backend/app/api/routes",
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "tcs": [
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-023",
+        "TC-024",
+        "TC-025",
+        "TC-026",
+        "TC-027",
+        "TC-028",
+        "TC-029",
+        "TC-030",
+        "TC-048"
+      ]
+    },
+    {
+      "module": "frontend/src/routes/_layout.tsx",
+      "folder": "frontend/src/routes",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "tcs": [
+        "TC-038"
+      ]
+    },
+    {
+      "module": "frontend/src/routes/_layout/admin.tsx",
+      "folder": "frontend/src/routes/_layout",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "tcs": [
+        "TC-047"
+      ]
+    },
+    {
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "folder": "frontend/src/routes/_layout",
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "tcs": [
+        "TC-039",
+        "TC-040",
+        "TC-041",
+        "TC-042",
+        "TC-043"
+      ]
+    },
+    {
+      "module": "frontend/src/routes/_layout/settings.tsx",
+      "folder": "frontend/src/routes/_layout",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "tcs": [
+        "TC-044",
+        "TC-045",
+        "TC-046"
+      ]
+    },
+    {
+      "module": "frontend/src/routes/login.tsx",
+      "folder": "frontend/src/routes",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "tcs": [
+        "TC-035",
+        "TC-036",
+        "TC-037"
+      ]
+    },
+    {
+      "module": "frontend/src/routes/signup.tsx",
+      "folder": "frontend/src/routes",
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "tcs": [
+        "TC-031",
+        "TC-032",
+        "TC-033",
+        "TC-034"
+      ]
+    }
+  ],
+  "failures": [],
+  "defects": [
+    {
+      "title": "Items list leaks other users' items (owner filter removed for non-superusers)",
+      "tcs": [
+        "TC-017",
+        "TC-043"
+      ],
+      "classification": "product_bug",
+      "recommendation": "fix_code",
+      "severity": "Sev1",
+      "confidence": "high",
+      "suspect_module": "backend/app/api/routes/items.py",
+      "suspect_detail": "read_items(), non-superuser else-branch: the diff removed `.where(Item.owner_id == current_user.id)` from both the count query and the item select",
+      "root_cause": "The regression diff dropped the owner_id filter in the non-superuser branch of GET /items/. Any authenticated user now gets every user's items, and `count` is the global total.",
+      "rationale": "This is a data leak and an authorization failure, not a policy change. The endpoint's single-item routes (read, update, delete) still enforce ownership with 403, so the list route is now inconsistent with them. The UI test TC-043 fails for the same reason. User B sees A's item, so the empty state 'You don't have any items yet' never renders. The frontend code is correct and only displays what the API returns. No test change is warranted.",
+      "steps": [
+        "Create users A and B (non-superusers)",
+        "As A, create 2 items; as B, create 1 item",
+        "As A, GET /api/v1/items/",
+        "In the UI, log in as a new user B with no items and open /items"
+      ],
+      "expected": "A receives only A's 2 items with count=2. A user with no items sees the empty state.",
+      "actual": "A receives all users' items (extra IDs present) and the count is the global total. User B sees A's items, so the empty state is never shown.",
+      "id": "DEF-001",
+      "status": "Closed",
+      "run_id": "run-20261116-131639",
+      "regression_from": "aabb901",
+      "evidence": [
+        {
+          "tc": "TC-017",
+          "error": "api = <httpx.Client object at 0x0000020429CAD190>\nnew_user = <function new_user.<locals>._make at 0x0000020429D5AC00>\n\n    @pytest.mark.tc(\"TC-017\")\n    def test_tc_017_list_items_only_own(api, new_user):\n        a = new_user()\n        b = new_user()\n        a1 = _create(api, a[\"headers\"], \"a1\")\n        a2 = _create(api, a[\"headers\"], \"a2\")\n        b1 = _create(api, b[\"headers\"], \"b1\")\n        r = api.get(\"/items/\", headers=a[\"headers\"])\n        assert r.status_code == 200\n        body = r.json()\n        ids = {i[\"id\"] for i in body[\"data\"]}\n>       assert ids == {a1[\"id\"], a2[\"id\"]}\nE       AssertionError: assert {'052be313-45...2c2921d', ...} == {'90f32471-14...ea068cea6e8e'}\nE         \nE         Extra items in the left set:\nE         '3900a4e4-737c-41e7-93f8-39035f188fe0'\nE         '4a68f1b9-1f39-4111-ae58-da2677f4ae68'\nE         'e1c356b8-07ce-44f4-9849-a52bec871eab'\nE         'f689cd87-fc4f-47d6-9a24-7f2d67b83f51'\nE         '6f929490-80f9-4dc2-b2fb-81f6dc00d5e9'...\nE         \nE         ...Full output truncated, use '-vv' to show\n\ngenerated\\api\\test_items.py:71: AssertionError",
+          "attachments": []
+        },
+        {
+          "tc": "TC-043",
+          "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('You don\\'t have any items yet')\nExpected: visible\nTimeout: 7000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('You don\\'t have any items yet') with timeout 7000ms\u001b[22m\n\u001b[2m  - waiting for getByText('You don\\'t have any items yet')\u001b[22m\n",
+          "attachments": [
+            "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\qa-orchestrator\\runs\\run-20261116-131129\\ui-artifacts\\items-TC-043-Items-list-sh-5d698--the-logged-in-user-s-items-chromium\\test-failed-1.png",
+            "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\qa-orchestrator\\runs\\run-20261116-131129\\ui-artifacts\\items-TC-043-Items-list-sh-5d698--the-logged-in-user-s-items-chromium\\error-context.md",
+            "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\qa-orchestrator\\runs\\run-20261116-131129\\ui-artifacts\\items-TC-043-Items-list-sh-5d698--the-logged-in-user-s-items-chromium\\trace.zip"
+          ]
+        }
+      ],
+      "resolution": "fix code",
+      "verified_in": "run-20261116-131639",
+      "first_seen_in": "run-20261116-131129"
+    },
+    {
+      "title": "Sign-up minimum password length raised from 8 to 10 characters",
+      "tcs": [
+        "TC-005"
+      ],
+      "classification": "test_issue",
+      "recommendation": "update_test",
+      "severity": "Sev3",
+      "confidence": "medium",
+      "suspect_module": "backend/app/models.py",
+      "suspect_detail": "UserRegister.password: Field(min_length=8 -> min_length=10)",
+      "root_cause": "The diff changed UserRegister.password min_length from 8 to 10, so an 8-character sign-up password now returns 422.",
+      "rationale": "The change looks like a deliberate tightening of password policy rather than a defect. A stricter minimum is a common, sensible change, and nothing else is broken. It is not certain, though. The change is inconsistent with UserCreate, UpdatePassword, NewPassword and UserUpdate, which still use min_length=8, so it may be an accidental or partial change. A human should confirm the intended policy. If 10 is the intent, update TC-005 (boundary 10 accepted, 9 rejected, 128 accepted, 129 rejected) and align the other schemas. If not, revert to 8.",
+      "steps": [
+        "POST /api/v1/users/signup with an 8-character password",
+        "Compare with the plan: 8 and 128 characters should be accepted, 129 rejected"
+      ],
+      "expected": "8-char password returns 200 (per the plan and the previous behaviour).",
+      "actual": "422 Unprocessable Content, because the minimum is now 10.",
+      "id": "DEF-002",
+      "status": "Closed",
+      "run_id": "run-20261116-131639",
+      "regression_from": "aabb901",
+      "evidence": [
+        {
+          "tc": "TC-005",
+          "error": "api = <httpx.Client object at 0x0000020429CAD190>\n\n    @pytest.mark.tc(\"TC-005\")\n    def test_tc_005_signup_password_boundaries(api):\n>       assert _signup(api, password=\"a\" * 8).status_code == 200\nE       AssertionError: assert 422 == 200\nE        +  where 422 = <Response [422 Unprocessable Content]>.status_code\nE        +    where <Response [422 Unprocessable Content]> = _signup(<httpx.Client object at 0x0000020429CAD190>, password=('a' * 8))\n\ngenerated\\api\\test_users.py:66: AssertionError",
+          "attachments": []
+        }
+      ],
+      "resolution": "update test",
+      "verified_in": "run-20261116-131639",
+      "first_seen_in": "run-20261116-131129"
+    }
+  ],
+  "verdict": "Go",
+  "reasons": [
+    "All executed tests passed; no open defects; no P1/P2 failures."
+  ],
+  "rows": [
+    {
+      "tc": "TC-012",
+      "title": "Create item with valid payload",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.29
+    },
+    {
+      "tc": "TC-013",
+      "title": "Create item without title",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.226
+    },
+    {
+      "tc": "TC-014",
+      "title": "Item title boundary: empty, 1, 255, 256 chars",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.398
+    },
+    {
+      "tc": "TC-015",
+      "title": "Item description boundary 255 / 256 chars",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P3",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.3
+    },
+    {
+      "tc": "TC-016",
+      "title": "Items endpoints require authentication",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.106
+    },
+    {
+      "tc": "TC-017",
+      "title": "List items returns only own items",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.548
+    },
+    {
+      "tc": "TC-018",
+      "title": "Get item owned by another user",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.41
+    },
+    {
+      "tc": "TC-019",
+      "title": "Update another user's item is blocked",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.469
+    },
+    {
+      "tc": "TC-020",
+      "title": "Delete another user's item is blocked",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.407
+    },
+    {
+      "tc": "TC-021",
+      "title": "Owner updates and deletes own item",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.313
+    },
+    {
+      "tc": "TC-022",
+      "title": "Get item with non-existent or malformed id",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.234
+    },
+    {
+      "tc": "TC-049",
+      "title": "Item write operations reject requests with no token",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "duration_s": 0.338
+    },
+    {
+      "tc": "TC-006",
+      "title": "Login with valid credentials returns token",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/login.py",
+      "duration_s": 0.216
+    },
+    {
+      "tc": "TC-007",
+      "title": "Login with wrong password",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/login.py",
+      "duration_s": 0.167
+    },
+    {
+      "tc": "TC-008",
+      "title": "Login with non-existent user",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/login.py",
+      "duration_s": 0.259
+    },
+    {
+      "tc": "TC-009",
+      "title": "Login with missing form fields",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P3",
+      "module": "backend/app/api/routes/login.py",
+      "duration_s": 0.005
+    },
+    {
+      "tc": "TC-011",
+      "title": "Tampered or invalid JWT rejected",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/deps.py",
+      "duration_s": 0.243
+    },
+    {
+      "tc": "TC-001",
+      "title": "Sign-up with valid data creates user",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.132
+    },
+    {
+      "tc": "TC-002",
+      "title": "Sign-up with duplicate email rejected",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.14
+    },
+    {
+      "tc": "TC-003",
+      "title": "Sign-up with invalid email format",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.005
+    },
+    {
+      "tc": "TC-004",
+      "title": "Sign-up password below minimum length (7 chars)",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.176
+    },
+    {
+      "tc": "TC-005",
+      "title": "Sign-up password at boundary lengths (10 and 128 chars) accepted, 9 and 129 rejected",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.232
+    },
+    {
+      "tc": "TC-023",
+      "title": "Get own profile",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.238
+    },
+    {
+      "tc": "TC-024",
+      "title": "Update own profile (full_name, email)",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.241
+    },
+    {
+      "tc": "TC-025",
+      "title": "Update own email to an existing user's email",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.398
+    },
+    {
+      "tc": "TC-026",
+      "title": "Change password with correct current password",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.547
+    },
+    {
+      "tc": "TC-027",
+      "title": "Change password with wrong current password or same password",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.466
+    },
+    {
+      "tc": "TC-028",
+      "title": "Normal user cannot access admin user endpoints",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.467
+    },
+    {
+      "tc": "TC-029",
+      "title": "Delete own account removes user",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.352
+    },
+    {
+      "tc": "TC-030",
+      "title": "Superuser cannot delete own account",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.014
+    },
+    {
+      "tc": "TC-048",
+      "title": "Users endpoints reject requests with no token",
+      "suite": "api",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "backend/app/api/routes/users.py",
+      "duration_s": 0.059
+    },
+    {
+      "tc": "TC-047",
+      "title": "Non-superuser cannot access admin page",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/_layout/admin.tsx",
+      "duration_s": 1.085
+    },
+    {
+      "tc": "TC-031",
+      "title": "Sign up via UI form",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/signup.tsx",
+      "duration_s": 0.75
+    },
+    {
+      "tc": "TC-032",
+      "title": "Sign-up validation: mismatched passwords",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/signup.tsx",
+      "duration_s": 0.537
+    },
+    {
+      "tc": "TC-033",
+      "title": "Sign-up validation: short password and invalid email",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/signup.tsx",
+      "duration_s": 0.597
+    },
+    {
+      "tc": "TC-034",
+      "title": "Sign-up with an already registered email",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/signup.tsx",
+      "duration_s": 0.761
+    },
+    {
+      "tc": "TC-035",
+      "title": "Login via UI with valid credentials",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/login.tsx",
+      "duration_s": 0.883
+    },
+    {
+      "tc": "TC-036",
+      "title": "Login via UI with wrong password",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/login.tsx",
+      "duration_s": 0.858
+    },
+    {
+      "tc": "TC-037",
+      "title": "Login form empty and invalid email validation",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P3",
+      "module": "frontend/src/routes/login.tsx",
+      "duration_s": 0.537
+    },
+    {
+      "tc": "TC-038",
+      "title": "Unauthenticated access to protected route redirects to login",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/_layout.tsx",
+      "duration_s": 0.479
+    },
+    {
+      "tc": "TC-039",
+      "title": "Create item through the UI",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "duration_s": 1.683
+    },
+    {
+      "tc": "TC-040",
+      "title": "Item form requires title and enforces max length",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "duration_s": 1.885
+    },
+    {
+      "tc": "TC-041",
+      "title": "Edit item through the UI",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "duration_s": 2.793
+    },
+    {
+      "tc": "TC-042",
+      "title": "Delete item through the UI with confirmation",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "duration_s": 3.73
+    },
+    {
+      "tc": "TC-043",
+      "title": "Items list shows only the logged-in user's items",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "duration_s": 2.965
+    },
+    {
+      "tc": "TC-044",
+      "title": "Update profile in settings",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/_layout/settings.tsx",
+      "duration_s": 1.375
+    },
+    {
+      "tc": "TC-045",
+      "title": "Change password in settings",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P1",
+      "module": "frontend/src/routes/_layout/settings.tsx",
+      "duration_s": 2.123
+    },
+    {
+      "tc": "TC-046",
+      "title": "Change password validation: mismatch and wrong current",
+      "suite": "ui",
+      "outcome": "passed",
+      "priority": "P2",
+      "module": "frontend/src/routes/_layout/settings.tsx",
+      "duration_s": 1.592
+    }
+  ]
+}

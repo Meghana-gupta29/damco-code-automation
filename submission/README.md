@@ -16,7 +16,7 @@ verdict, with human review gates, defect triage, a fix-or-update decision, and P
 | 1 | Source repo with agents, prompts, test code, README | this repo; agents in `.claude/agents/`, run instructions below | Done |
 | 2 | Architecture diagram (roles, inputs/outputs, tools, human review) | [architecture.md](architecture.md), visual: [flowchart.html](flowchart.html) | Done |
 | 3 | Test strategy note | [test-strategy.md](test-strategy.md) | Done |
-| 4 | Generated artifacts: test cases, API and UI scripts, sample defects | cases: `runs/run-20261116-093132/test_cases.json`; API: `generated/api/`; UI: `generated/ui/`; defects: `evidence/` (see note) | Defects: pending recording |
+| 4 | Generated artifacts: test cases, API and UI scripts, sample defects | cases: [test-plan.md](test-plan.md) (source: `runs/run-20261116-093132/test_cases.json`); API: `generated/api/`; UI: `generated/ui/`; defects: `evidence/` (see note) | Defects: pending recording |
 | 5 | QA dashboard (summary by suite, defects, trend, verdict) | `dashboard/index.html` and `evidence/*/report.html` | Pending recording run |
 | 6 | AI evaluation note | [ai-evaluation.md](ai-evaluation.md) | Done |
 | 7 | Demo recording | to be added | Pending |

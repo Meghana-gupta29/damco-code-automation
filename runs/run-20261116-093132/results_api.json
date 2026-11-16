@@ -1,0 +1,254 @@
+{
+  "suite": "api",
+  "finished": 1794814794.2177763,
+  "rows": [
+    {
+      "tc": "TC-012",
+      "test": "generated/api/test_items.py::test_tc_012_create_item_valid",
+      "outcome": "passed",
+      "duration_s": 0.319,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-013",
+      "test": "generated/api/test_items.py::test_tc_013_create_item_without_title",
+      "outcome": "passed",
+      "duration_s": 0.229,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-014",
+      "test": "generated/api/test_items.py::test_tc_014_item_title_boundaries",
+      "outcome": "passed",
+      "duration_s": 0.447,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-015",
+      "test": "generated/api/test_items.py::test_tc_015_item_description_boundaries",
+      "outcome": "passed",
+      "duration_s": 0.308,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-016",
+      "test": "generated/api/test_items.py::test_tc_016_items_endpoints_require_auth",
+      "outcome": "passed",
+      "duration_s": 0.108,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-017",
+      "test": "generated/api/test_items.py::test_tc_017_list_items_only_own",
+      "outcome": "passed",
+      "duration_s": 0.555,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-018",
+      "test": "generated/api/test_items.py::test_tc_018_get_item_owned_by_another_user",
+      "outcome": "passed",
+      "duration_s": 0.424,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-019",
+      "test": "generated/api/test_items.py::test_tc_019_update_other_users_item_blocked",
+      "outcome": "passed",
+      "duration_s": 0.47,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-020",
+      "test": "generated/api/test_items.py::test_tc_020_delete_other_users_item_blocked",
+      "outcome": "passed",
+      "duration_s": 0.438,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-021",
+      "test": "generated/api/test_items.py::test_tc_021_owner_updates_and_deletes_item",
+      "outcome": "passed",
+      "duration_s": 0.319,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-022",
+      "test": "generated/api/test_items.py::test_tc_022_get_item_nonexistent_or_malformed_id",
+      "outcome": "passed",
+      "duration_s": 0.269,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-049",
+      "test": "generated/api/test_items.py::test_tc_049_item_write_ops_reject_no_token",
+      "outcome": "passed",
+      "duration_s": 0.385,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-006",
+      "test": "generated/api/test_login.py::test_tc_006_login_valid_credentials_returns_token",
+      "outcome": "passed",
+      "duration_s": 0.221,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-007",
+      "test": "generated/api/test_login.py::test_tc_007_login_wrong_password",
+      "outcome": "passed",
+      "duration_s": 0.18,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-008",
+      "test": "generated/api/test_login.py::test_tc_008_login_non_existent_user",
+      "outcome": "passed",
+      "duration_s": 0.255,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-009",
+      "test": "generated/api/test_login.py::test_tc_009_login_missing_form_fields",
+      "outcome": "passed",
+      "duration_s": 0.005,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-011",
+      "test": "generated/api/test_login.py::test_tc_011_tampered_jwt_rejected",
+      "outcome": "passed",
+      "duration_s": 0.232,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-001",
+      "test": "generated/api/test_users.py::test_tc_001_signup_valid_creates_user",
+      "outcome": "passed",
+      "duration_s": 0.143,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-002",
+      "test": "generated/api/test_users.py::test_tc_002_signup_duplicate_email_rejected",
+      "outcome": "passed",
+      "duration_s": 0.138,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-003",
+      "test": "generated/api/test_users.py::test_tc_003_signup_invalid_email_format",
+      "outcome": "passed",
+      "duration_s": 0.046,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-004",
+      "test": "generated/api/test_users.py::test_tc_004_signup_password_below_min_length",
+      "outcome": "passed",
+      "duration_s": 0.174,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-005",
+      "test": "generated/api/test_users.py::test_tc_005_signup_password_boundaries",
+      "outcome": "passed",
+      "duration_s": 0.188,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-023",
+      "test": "generated/api/test_users.py::test_tc_023_get_own_profile",
+      "outcome": "passed",
+      "duration_s": 0.228,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-024",
+      "test": "generated/api/test_users.py::test_tc_024_update_own_profile",
+      "outcome": "passed",
+      "duration_s": 0.248,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-025",
+      "test": "generated/api/test_users.py::test_tc_025_update_own_email_to_existing",
+      "outcome": "passed",
+      "duration_s": 0.452,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-026",
+      "test": "generated/api/test_users.py::test_tc_026_change_password_correct_current",
+      "outcome": "passed",
+      "duration_s": 0.645,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-027",
+      "test": "generated/api/test_users.py::test_tc_027_change_password_wrong_current_or_same",
+      "outcome": "passed",
+      "duration_s": 0.461,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-028",
+      "test": "generated/api/test_users.py::test_tc_028_normal_user_cannot_access_admin_endpoints",
+      "outcome": "passed",
+      "duration_s": 0.471,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-029",
+      "test": "generated/api/test_users.py::test_tc_029_delete_own_account",
+      "outcome": "passed",
+      "duration_s": 0.345,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-030",
+      "test": "generated/api/test_users.py::test_tc_030_superuser_cannot_delete_self",
+      "outcome": "passed",
+      "duration_s": 0.014,
+      "error": null,
+      "phase": "call"
+    },
+    {
+      "tc": "TC-048",
+      "test": "generated/api/test_users.py::test_tc_048_users_endpoints_reject_no_token",
+      "outcome": "passed",
+      "duration_s": 0.057,
+      "error": null,
+      "phase": "call"
+    }
+  ]
+}

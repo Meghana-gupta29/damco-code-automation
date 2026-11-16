@@ -1,0 +1,47 @@
+.....F...............F.........                                          [100%]
+================================== FAILURES ===================================
+_______________________ test_tc_017_list_items_only_own _______________________
+
+api = <httpx.Client object at 0x0000020429CAD190>
+new_user = <function new_user.<locals>._make at 0x0000020429D5AC00>
+
+    @pytest.mark.tc("TC-017")
+    def test_tc_017_list_items_only_own(api, new_user):
+        a = new_user()
+        b = new_user()
+        a1 = _create(api, a["headers"], "a1")
+        a2 = _create(api, a["headers"], "a2")
+        b1 = _create(api, b["headers"], "b1")
+        r = api.get("/items/", headers=a["headers"])
+        assert r.status_code == 200
+        body = r.json()
+        ids = {i["id"] for i in body["data"]}
+>       assert ids == {a1["id"], a2["id"]}
+E       AssertionError: assert {'052be313-45...2c2921d', ...} == {'90f32471-14...ea068cea6e8e'}
+E         
+E         Extra items in the left set:
+E         '3900a4e4-737c-41e7-93f8-39035f188fe0'
+E         '4a68f1b9-1f39-4111-ae58-da2677f4ae68'
+E         'e1c356b8-07ce-44f4-9849-a52bec871eab'
+E         'f689cd87-fc4f-47d6-9a24-7f2d67b83f51'
+E         '6f929490-80f9-4dc2-b2fb-81f6dc00d5e9'...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+generated\api\test_items.py:71: AssertionError
+___________________ test_tc_005_signup_password_boundaries ____________________
+
+api = <httpx.Client object at 0x0000020429CAD190>
+
+    @pytest.mark.tc("TC-005")
+    def test_tc_005_signup_password_boundaries(api):
+>       assert _signup(api, password="a" * 8).status_code == 200
+E       AssertionError: assert 422 == 200
+E        +  where 422 = <Response [422 Unprocessable Content]>.status_code
+E        +    where <Response [422 Unprocessable Content]> = _signup(<httpx.Client object at 0x0000020429CAD190>, password=('a' * 8))
+
+generated\api\test_users.py:66: AssertionError
+=========================== short test summary info ===========================
+FAILED generated/api/test_items.py::test_tc_017_list_items_only_own - Asserti...
+FAILED generated/api/test_users.py::test_tc_005_signup_password_boundaries - ...
+2 failed, 29 passed in 11.32s

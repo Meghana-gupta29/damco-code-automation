@@ -1,0 +1,19 @@
+......................F.........                                         [100%]
+================================== FAILURES ===================================
+___________________ test_tc_005_signup_password_boundaries ____________________
+
+api = <httpx.Client object at 0x0000027782E21410>
+
+    @pytest.mark.tc("TC-005")
+    def test_tc_005_signup_password_boundaries(api):
+        assert _signup(api, password="a" * 10).status_code == 200
+        assert _signup(api, password="b" * 128).status_code == 200
+>       assert _signup(api, password="c" * 9).status_code == 422
+E       AssertionError: assert 200 == 422
+E        +  where 200 = <Response [200 OK]>.status_code
+E        +    where <Response [200 OK]> = _signup(<httpx.Client object at 0x0000027782E21410>, password=('c' * 9))
+
+generated\api\test_users.py:68: AssertionError
+=========================== short test summary info ===========================
+FAILED generated/api/test_users.py::test_tc_005_signup_password_boundaries - ...
+1 failed, 31 passed in 12.38s

@@ -1,0 +1,23 @@
+
+Running 18 tests using 1 worker
+
+  ✓   1 [chromium] › generated\ui\admin.spec.ts:10:5 › TC-047 Non-superuser cannot access admin page (1.2s)
+  ✓   2 [chromium] › generated\ui\auth.spec.ts:10:5 › TC-031 Sign up via UI form (792ms)
+  ✓   3 [chromium] › generated\ui\auth.spec.ts:25:5 › TC-032 Sign-up validation: mismatched passwords (543ms)
+  ✓   4 [chromium] › generated\ui\auth.spec.ts:42:5 › TC-033 Sign-up validation: short password and invalid email (607ms)
+  ✓   5 [chromium] › generated\ui\auth.spec.ts:64:5 › TC-034 Sign-up with an already registered email (868ms)
+  ✓   6 [chromium] › generated\ui\auth.spec.ts:81:5 › TC-035 Login via UI with valid credentials (903ms)
+  ✓   7 [chromium] › generated\ui\auth.spec.ts:99:5 › TC-036 Login via UI with wrong password (871ms)
+  ✓   8 [chromium] › generated\ui\auth.spec.ts:116:5 › TC-037 Login form empty and invalid email validation (539ms)
+  ✓   9 [chromium] › generated\ui\auth.spec.ts:134:5 › TC-038 Unauthenticated access to protected route redirects to login (517ms)
+  ✓  10 [chromium] › generated\ui\items.spec.ts:20:5 › TC-039 Create item through the UI (1.7s)
+  ✓  11 [chromium] › generated\ui\items.spec.ts:36:5 › TC-040 Item form requires title and enforces max length (1.8s)
+  ✓  12 [chromium] › generated\ui\items.spec.ts:64:5 › TC-041 Edit item through the UI (2.6s)
+  ✓  13 [chromium] › generated\ui\items.spec.ts:90:5 › TC-042 Delete item through the UI with confirmation (3.4s)
+  ✓  14 [chromium] › generated\ui\items.spec.ts:126:5 › TC-043 Items list shows only the logged-in user's items (3.1s)
+  ✓  15 [chromium] › generated\ui\pr1_item_search.spec.ts:9:5 › TC-051 Search box filters the items list and shows the no-match empty state (2.2s)
+  ✓  16 [chromium] › generated\ui\settings.spec.ts:11:5 › TC-044 Update profile in settings (1.4s)
+  ✓  17 [chromium] › generated\ui\settings.spec.ts:34:5 › TC-045 Change password in settings (2.1s)
+  ✓  18 [chromium] › generated\ui\settings.spec.ts:56:5 › TC-046 Change password validation: mismatch and wrong current (1.5s)
+
+  18 passed (28.1s)

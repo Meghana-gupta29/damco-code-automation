@@ -1,0 +1,15 @@
+{
+  "approver": "bansa",
+  "at": "2026-11-16T10:32:49",
+  "sha256": "12a918e47dd87198e58866ba2efbb1a9a01ea4ddfd5f5da0870aa9b6e5a9ddbb",
+  "amendments": [
+    {
+      "by": "bansa",
+      "at": "2026-11-16T13:16:13",
+      "note": "DEF-002: TC-005 now checks the new minimum of 10: 10 and 128 characters are accepted, and 9 and 129 are rejected.",
+      "tcs": [
+        "TC-005"
+      ]
+    }
+  ]
+}
