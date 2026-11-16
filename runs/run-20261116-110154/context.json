@@ -1,0 +1,138 @@
+{
+  "target_repo": "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\full-stack-fastapi-template",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/v1/items/",
+      "module": "backend/app/api/routes/items.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/items/{id}",
+      "module": "backend/app/api/routes/items.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/items/",
+      "module": "backend/app/api/routes/items.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/items/{id}",
+      "module": "backend/app/api/routes/items.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/items/{id}",
+      "module": "backend/app/api/routes/items.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/login/access-token",
+      "module": "backend/app/api/routes/login.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/login/test-token",
+      "module": "backend/app/api/routes/login.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/password-recovery/{email}",
+      "module": "backend/app/api/routes/login.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/reset-password/",
+      "module": "backend/app/api/routes/login.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/password-recovery-html-content/{email}",
+      "module": "backend/app/api/routes/login.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/private/users/",
+      "module": "backend/app/api/routes/private.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users/",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/users/me",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/users/me/password",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/users/me",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users/signup",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/{user_id}",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/users/{user_id}",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/users/{user_id}",
+      "module": "backend/app/api/routes/users.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/utils/test-email/",
+      "module": "backend/app/api/routes/utils.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/utils/health-check/",
+      "module": "backend/app/api/routes/utils.py"
+    }
+  ],
+  "ui_routes": [
+    "frontend/src/routes/__root.tsx",
+    "frontend/src/routes/_layout/admin.tsx",
+    "frontend/src/routes/_layout/index.tsx",
+    "frontend/src/routes/_layout/items.tsx",
+    "frontend/src/routes/_layout/settings.tsx",
+    "frontend/src/routes/_layout.tsx",
+    "frontend/src/routes/login.tsx",
+    "frontend/src/routes/recover-password.tsx",
+    "frontend/src/routes/reset-password.tsx",
+    "frontend/src/routes/signup.tsx"
+  ],
+  "backend_modules": [
+    "backend/app/crud.py",
+    "backend/app/models.py",
+    "backend/app/core/security.py",
+    "backend/app/api/deps.py"
+  ]
+}

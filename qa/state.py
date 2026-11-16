@@ -1,6 +1,7 @@
 """Run state: every run lives in runs/<run-id>/ and gates are enforced here."""
 import hashlib
 import json
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -21,6 +22,16 @@ class Run:
         if not runs:
             raise SystemExit("No runs yet. Start with: qa init")
         return cls(runs_dir, runs[-1])
+
+    def has_results(self) -> bool:
+        return self.path("results_api.json").exists() or self.path("results_ui.json").exists()
+
+    def clone_for_execution(self) -> "Run":
+        """New run folder reusing this run's approved plan (same hash, so Gate 1 still holds)."""
+        new = Run(self.dir.parent, new_run_id())
+        for f in ("context.json", "test_cases.json", "approved.json"):
+            shutil.copy(self.path(f), new.path(f))
+        return new
 
     def path(self, name: str) -> Path:
         return self.dir / name

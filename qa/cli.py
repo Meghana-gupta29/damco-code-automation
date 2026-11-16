@@ -1,6 +1,8 @@
 import argparse
 import getpass
 import json
+import subprocess
+from datetime import datetime
 
 from .config import load_config
 from .discover import discover
@@ -48,10 +50,40 @@ def cmd_generate(cfg, args):
         print("  " + f)
 
 
+def _app_git(repo) -> str:
+    try:
+        sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=repo, capture_output=True,
+                             text=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain", "--", "backend", "frontend"], cwd=repo,
+                               capture_output=True, text=True).stdout.strip()
+        return sha + ("+local-changes" if dirty else "")
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def cmd_report(cfg, args):
+    from .report import write_report
+    run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
+    print("Report:", write_report(run, cfg))
+
+
+def cmd_email(cfg, args):
+    from .emailer import send_report
+    run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
+    inbox = send_report(cfg, run)
+    print(f"Report emailed. Open the inbox: {inbox}")
+
+
 def cmd_run(cfg, args):
+    from .report import write_report
     from .runner import run_api, run_ui
     run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
     run.require_approved_plan()  # Gate 1 enforced in code
+    if run.has_results():
+        run = run.clone_for_execution()  # every execution is its own run (needed for the trend)
+    run.write_json("meta.json", {"label": args.label, "started": datetime.now().isoformat(timespec="seconds"),
+                                 "app_git": _app_git(cfg["_target_repo"])})
+    print(f"Run {run.id} {args.label}")
     suites = {"api": run_api, "ui": run_ui}
     for name in ([args.suite] if args.suite else ["api", "ui"]):
         rows = suites[name](cfg, run)["rows"]
@@ -60,6 +92,8 @@ def cmd_run(cfg, args):
         for r in rows:
             if r["outcome"] == "failed":
                 print(f"  FAIL {r['tc']} {r['test']}")
+    report = write_report(run, cfg)
+    print(f"Verdict: {run.read_json('summary.json')['verdict']}  report: {report}")
 
 
 def main():
@@ -76,6 +110,9 @@ def main():
     g.set_defaults(fn=cmd_generate)
     rp = sub.add_parser("run")
     rp.add_argument("--suite", choices=["api", "ui"])
+    rp.add_argument("--label", default="")
+    sub.add_parser("report").set_defaults(fn=cmd_report)
+    sub.add_parser("email").set_defaults(fn=cmd_email)
     rp.set_defaults(fn=cmd_run)
     args = p.parse_args()
     args.fn(load_config(args.config), args)
