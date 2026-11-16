@@ -1,0 +1,30 @@
+# Target application (the open-source repo under test)
+target:
+  repo_path: ../full-stack-fastapi-template
+  api_url: http://localhost:8000
+  ui_url: http://localhost:5173
+  fork_repo: Meghana-gupta29/damco-code-opensource   # PR target
+  base_branch: master
+
+# Which LLM runs the agents. "claude_code" = local `claude -p` (no API key).
+# Later: "anthropic" (needs ANTHROPIC_API_KEY) for server/CI hosting.
+llm:
+  provider: claude_code
+  claude_code:
+    command: claude
+    timeout_s: 600
+  anthropic:
+    model: claude-sonnet-5-5
+
+# Human-in-the-loop gates. "cli" = terminal approve; later "pipeline".
+gates:
+  mode: cli
+
+email:
+  to: ccode3817@gmail.com
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  # SMTP_USER / SMTP_PASSWORD (Gmail app password) come from .env
+
+paths:
+  runs_dir: runs
