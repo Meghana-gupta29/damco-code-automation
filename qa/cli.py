@@ -150,6 +150,8 @@ def main():
     ap2 = sub.add_parser("app")
     ap2.add_argument("action", choices=["deploy", "status"])
     ap2.set_defaults(fn=lambda cfg, a: appctl.deploy(cfg) if a.action == "deploy" else appctl.status(cfg))
+    sub.add_parser("package", help="copy run evidence into submission/evidence").set_defaults(
+        fn=lambda cfg, a: __import__("qa.package", fromlist=["x"]).package(cfg))
     fa = sub.add_parser("feature", help="play the developer: feature branch (+ real PR on the fork)")
     fa.add_argument("action", choices=["apply"])
     fa.add_argument("--pr", action="store_true", help="push the branch and open a pull request")

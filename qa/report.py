@@ -1,6 +1,7 @@
 """Stage 6: summary + verdict + HTML report/dashboard (stdlib only, self-contained HTML)."""
 import html
 import json
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -169,7 +170,10 @@ def render_report(s: dict, history: list[dict], title="QA Release Readiness Repo
         dr = "".join(f"<tr><td>{_e(d['id'])}</td><td>{_e(d.get('severity',''))}</td><td>{_e(d.get('status',''))}</td>"
                      f"<td>{_e(d.get('classification',''))}</td><td>{_e(d.get('title',''))}</td>"
                      f"<td><code>{_e(d.get('suspect_module',''))}</code></td></tr>" for d in s["defects"])
-        defect_html = ("<h2>Defects</h2><table><tr><th>ID</th><th>Severity</th><th>Status</th>"
+        by_sev = ", ".join(f"{k}: {v}" for k, v in sorted(Counter(d.get("severity", "?") for d in s["defects"]).items()))
+        by_st = ", ".join(f"{k}: {v}" for k, v in sorted(Counter(d.get("status", "?") for d in s["defects"]).items()))
+        defect_html = (f"<h2>Defects</h2><div class='muted'>By severity: {_e(by_sev)} &middot; By status: {_e(by_st)}</div>"
+                       "<table><tr><th>ID</th><th>Severity</th><th>Status</th>"
                        f"<th>Class</th><th>Title</th><th>Suspect module</th></tr>{dr}</table>")
     reasons = "".join(f"<li>{_e(r)}</li>" for r in s["reasons"])
     hist_rows = "".join(

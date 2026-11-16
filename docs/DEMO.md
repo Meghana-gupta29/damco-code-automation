@@ -84,6 +84,9 @@ start dashboard\index.html
 No GitHub? Use a local branch instead: `qa feature apply` then `qa pr-sync --branch feature/item-search`.
 
 ## After recording
+Collect the real evidence for the submission first (reset deletes the run folders), then commit it:
 ```powershell
+qa package                  # copies reports, defect reports, screenshots, dashboard into submission\evidence
+git add submission; git commit -m "Add recorded-run evidence"; git push
 qa reset-demo --deploy
 ```

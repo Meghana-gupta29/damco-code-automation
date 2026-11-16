@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Orchestrator Flow</title>
+<style>
+  :root {
+    --bg: #f5f7fa; --card: #ffffff; --ink: #1b2430; --muted: #5b6b7f; --line: #cfd8e3;
+    --cmd-bg: #0f172a; --cmd-ink: #e2e8f0;
+    --ai: #6d28d9; --ai-bg: #ede9fe;
+    --human: #b45309; --human-bg: #fef3c7;
+    --auto: #0369a1; --auto-bg: #e0f2fe;
+    --good: #15803d; --good-bg: #dcfce7;
+    --bad: #b42318; --bad-bg: #fee4e2;
+    --s0: #64748b; --s1: #15803d; --s2: #b45309; --s3: #b42318; --s4: #6d28d9; --s5: #0369a1; --s6: #0e7490;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1220; --card: #131c2e; --ink: #e5ecf6; --muted: #9fb0c6; --line: #2a3a55;
+      --cmd-bg: #050a14; --cmd-ink: #dbe6f5;
+      --ai: #c4b5fd; --ai-bg: #2e1f5e;
+      --human: #fcd34d; --human-bg: #4a3410;
+      --auto: #7dd3fc; --auto-bg: #0c3350;
+      --good: #86efac; --good-bg: #0f3a22;
+      --bad: #fca5a5; --bad-bg: #4c1511;
+      --s0: #94a3b8; --s1: #4ade80; --s2: #fbbf24; --s3: #f87171; --s4: #c4b5fd; --s5: #7dd3fc; --s6: #67e8f9;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", system-ui, Arial, sans-serif; line-height: 1.4; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 48px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; font-size: 13px; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .b-ai { background: var(--ai-bg); color: var(--ai); }
+  .b-human { background: var(--human-bg); color: var(--human); }
+  .b-auto { background: var(--auto-bg); color: var(--auto); }
+  .b-good { background: var(--good-bg); color: var(--good); }
+  .b-bad { background: var(--bad-bg); color: var(--bad); }
+
+  /* pipeline strip */
+  .pipe { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 26px; }
+  .pipe h2 { margin: 0 0 10px; font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .strip { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; }
+  .node { border: 1.5px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 600; text-align: center; min-width: 108px; }
+  .node small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+  .node.ai { border-color: var(--ai); background: var(--ai-bg); color: var(--ai); }
+  .node.human { border-color: var(--human); background: var(--human-bg); color: var(--human); }
+  .node.auto { border-color: var(--auto); background: var(--auto-bg); color: var(--auto); }
+  .node small { color: inherit; opacity: .8; }
+  .arrow { align-self: center; color: var(--muted); font-size: 18px; }
+
+  /* scenes */
+  .scene { display: grid; grid-template-columns: 56px 1fr; gap: 0 14px; position: relative; }
+  .rail { display: flex; flex-direction: column; align-items: center; }
+  .num { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 18px; color: #fff; flex: none; }
+  .line { width: 3px; flex: 1; background: var(--line); margin: 4px 0; min-height: 18px; }
+  .scene:last-child .line { display: none; }
+  .body { background: var(--card); border: 1px solid var(--line); border-left-width: 6px; border-radius: 12px; padding: 14px 18px 16px; margin-bottom: 18px; }
+  .body h3 { margin: 0; font-size: 18px; }
+  .goal { color: var(--muted); font-size: 14px; margin: 2px 0 10px; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .step { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 8px 10px; border-radius: 8px; background: var(--bg); border: 1px dashed var(--line); }
+  .step .what { font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .step.gate { border-style: solid; border-color: var(--human); background: var(--human-bg); }
+  code.cmd { display: block; background: var(--cmd-bg); color: var(--cmd-ink); padding: 7px 11px; border-radius: 6px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 13.5px; overflow-x: auto; white-space: pre; }
+  .out { font-size: 13px; color: var(--muted); }
+  .result { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+  .note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .pre-lane { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px; font-size: 14px; }
+  .pre-lane code { font-family: Consolas, monospace; background: var(--cmd-bg); color: var(--cmd-ink); padding: 2px 7px; border-radius: 4px; font-size: 13px; }
+  .foot { margin-top: 10px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 640px) { .scene { grid-template-columns: 40px 1fr; gap: 0 8px; } .num { width: 34px; height: 34px; font-size: 15px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>QA Orchestrator: agentic QA, from test plan to release verdict</h1>
+  <p class="sub">App under test: full-stack-fastapi-template (FastAPI + React). Flow tested: sign-up, login, items, user settings. All commands run from <b>qa-orchestrator/</b> in PowerShell.</p>
+
+  <div class="legend">
+    <span class="badge b-ai">AI agent (local Claude Code)</span>
+    <span class="badge b-human">Human decision (QA Lead)</span>
+    <span class="badge b-auto">Automated (Python / pytest / Playwright)</span>
+    <span class="badge b-good">Passing</span>
+    <span class="badge b-bad">Failing</span>
+  </div>
+
+  <div class="pipe">
+    <h2>How it works: the pipeline</h2>
+    <div class="strip">
+      <div class="node auto">Discover<small>routes to source files</small></div><div class="arrow">&rarr;</div>
+      <div class="node ai">Test design agent<small>plan: 48 cases</small></div><div class="arrow">&rarr;</div>
+      <div class="node human">Gate 1<small>QA Lead approves plan</small></div><div class="arrow">&rarr;</div>
+      <div class="node ai">API + UI test agents<small>write pytest + Playwright</small></div><div class="arrow">&rarr;</div>
+      <div class="node auto">Execute<small>31 API + 17 UI tests</small></div><div class="arrow">&rarr;</div>
+      <div class="node ai">Triage agent<small>defects + suspect file</small></div><div class="arrow">&rarr;</div>
+      <div class="node human">Gate 2<small>fix the code or the test?</small></div><div class="arrow">&rarr;</div>
+      <div class="node ai">Fixer / Test-updater<small>diff shown, you confirm</small></div><div class="arrow">&rarr;</div>
+      <div class="node auto">Report + verdict<small>Go / No-Go, dashboard</small></div><div class="arrow">&rarr;</div>
+      <div class="node auto">Email<small>Mailpit inbox</small></div>
+    </div>
+    <div class="foot">Gates are enforced in code: <code>qa run</code> refuses until the plan is approved, and re-approval is required if the plan changes.</div>
+  </div>
+
+  <div class="pre-lane">
+    <b>Already done before recording (one-time):</b>
+    <code>qa init</code> &rarr; <code>qa plan</code> (AI writes the plan) &rarr; you review it &rarr; <code>qa approve plan</code> &rarr; <code>qa generate api</code> + <code>qa generate ui</code> (AI writes the tests).
+  </div>
+
+  <!-- SCENE 0 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s0)">0</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s0)">
+      <h3>Start from a clean slate</h3>
+      <div class="goal">Clears old runs and the mailbox, puts the app back on <b>master</b>, rebuilds it. Plan stays approved.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Reset and redeploy</div>
+          <code class="cmd">qa reset-demo --deploy</code>
+          <div class="out">Check: <code class="cmd" style="display:inline;padding:2px 7px">qa app status</code> shows master @ aabb901, healthy</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 1 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s1)">1</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s1)">
+      <h3>Happy run: everything passes</h3>
+      <div class="goal">Baseline: all 48 tests pass against the healthy app. Report is built and emailed.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Run API (pytest) and UI (Playwright) suites, build report and verdict</div>
+          <code class="cmd">qa run --label happy</code></li>
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Email the report; open the inbox at http://localhost:8025</div>
+          <code class="cmd">qa email</code></li>
+      </ul>
+      <div class="result"><span class="badge b-good">48 / 48 passed</span><span class="badge b-good">Verdict: Go</span> Report shows modules covered: which test covers which source file.</div>
+    </div>
+  </div>
+
+  <!-- SCENE 2 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s2)">2</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s2)">
+      <h3>Sabotage the app on a new branch</h3>
+      <div class="goal">Plant 2 deliberate bugs on branch <b>demo/sabotage</b>. Master is untouched.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Create branch, apply bugs, commit</div>
+          <code class="cmd">qa sabotage apply</code>
+          <div class="out">Bug 1: items list no longer filters by owner (users see each other's items). Bug 2: sign-up minimum password 8 &rarr; 10.</div></li>
+        <li class="step"><div class="what">Show the planted bugs</div>
+          <code class="cmd">git -C ..\full-stack-fastapi-template diff master demo/sabotage</code></li>
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Rebuild the running app from the sabotage branch</div>
+          <code class="cmd">qa app deploy</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 3 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s3)">3</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s3)">
+      <h3>Detect: failures and impacted area</h3>
+      <div class="goal">Same suite, broken app. The AI triages failures into defects and names the suspect code.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Run all tests</div>
+          <code class="cmd">qa run --label sabotaged</code></li>
+        <li class="step"><div class="what"><span class="badge b-ai">AI</span> Triage: group failures, classify, rank severity, point at the file (uses the diff since the last green build)</div>
+          <code class="cmd">qa triage</code></li>
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Email the No-Go report</div>
+          <code class="cmd">qa email</code>
+          <div class="out">Open runs\&lt;latest&gt;\report.html and runs\&lt;latest&gt;\defects\DEF-00x.md to show the impacted modules.</div></li>
+      </ul>
+      <div class="result"><span class="badge b-bad">3 failed: TC-017, TC-043, TC-005</span><span class="badge b-bad">Verdict: No-Go</span>
+        <span class="badge b-bad">DEF-001 Sev1: data leak in items.py</span><span class="badge b-human">DEF-002 Sev3: password rule in models.py</span></div>
+    </div>
+  </div>
+
+  <!-- SCENE 4 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s4)">4</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s4)">
+      <h3>Your decision per defect (Gate 2)</h3>
+      <div class="goal">The AI only recommends. You choose, per defect, whether the code or the test is wrong. One of each.</div>
+      <ul class="steps">
+        <li class="step gate"><div class="what"><span class="badge b-human">Human</span> Interactive prompt for each defect</div>
+          <code class="cmd">qa decide</code>
+          <div class="out">DEF-001 (data leak): press <b>c</b> = fix the CODE. &nbsp; DEF-002 (password 8 &rarr; 10): press <b>t</b> = update the TEST. Choose by title: numbering may vary.</div></li>
+        <li class="step gate"><div class="what"><span class="badge b-ai">AI</span> proposes, <span class="badge b-human">Human</span> confirms each diff with y</div>
+          <code class="cmd">qa fix</code>
+          <div class="out">Code path: minimal diff restoring the owner filter, committed on the sabotage branch. Test path: boundary moves to 9 rejected / 10 accepted, and the approved plan is amended with an audit trail.</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SCENE 5 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s5)">5</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s5)">
+      <h3>Verify: back to 100%</h3>
+      <div class="goal">Redeploy with the code fix and run everything again. Defects close automatically when their tests pass.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Redeploy the fixed code</div>
+          <code class="cmd">qa app deploy</code></li>
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Full run</div>
+          <code class="cmd">qa run --label fixed</code></li>
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Email, then show the dashboard</div>
+          <code class="cmd">qa email
+start dashboard\index.html</code></li>
+      </ul>
+      <div class="result"><span class="badge b-good">48 / 48 passed</span><span class="badge b-good">Verdict: Go</span><span class="badge b-good">DEF-001, DEF-002: Closed</span> Trend: Go &rarr; No-Go &rarr; Go.</div>
+    </div>
+  </div>
+
+  <!-- SCENE 6 -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s6)">6</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s6)">
+      <h3>A developer's PR keeps the automation up to date</h3>
+      <div class="goal">New feature (item search) arrives as a real pull request. The QA agent reads it, adds tests for it, and re-runs: 48 &rarr; 50 tests.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Plays the developer: feature branch + a real PR on your fork. Note the PR number it prints.</div>
+          <code class="cmd">qa feature apply --pr</code></li>
+        <li class="step"><div class="what"><span class="badge b-ai">AI</span> QA agent reads the PR: impact analysis, existing cases at risk, proposes 1 API + 1 UI case</div>
+          <code class="cmd">qa pr-sync --pr 1</code>
+          <div class="out">Use the PR number printed above. Review runs\&lt;latest&gt;\test_cases.json: new cases TC-050 (API) and TC-051 (UI).</div></li>
+        <li class="step gate"><div class="what"><span class="badge b-human">Human</span> Gate 1 again: approve the new cases (optional: run <code style="background:var(--cmd-bg);color:var(--cmd-ink);padding:1px 6px;border-radius:4px">qa run</code> first to show it refusing)</div>
+          <code class="cmd">qa approve plan</code></li>
+        <li class="step"><div class="what"><span class="badge b-ai">AI</span> Writes tests ONLY for the new cases, in new files. Existing tests untouched.</div>
+          <code class="cmd">qa generate all --new-only</code></li>
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Deploy the PR branch, run everything, email</div>
+          <code class="cmd">qa app deploy
+qa run --label pr-feature
+qa email
+start dashboard\index.html</code></li>
+      </ul>
+      <div class="result"><span class="badge b-good">50 / 50 passed (32 API + 18 UI)</span><span class="badge b-good">Verdict: Go</span> Report adds "Change under test" and the new cases.</div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="scene">
+    <div class="rail"><div class="num" style="background:var(--s0)">&#10003;</div><div class="line"></div></div>
+    <div class="body" style="border-left-color:var(--s0)">
+      <h3>After recording</h3>
+      <div class="goal">Closes the demo PR, deletes the demo branches, clears runs and mailbox, puts the app back on master.</div>
+      <ul class="steps">
+        <li class="step"><div class="what"><span class="badge b-auto">Automated</span> Reset</div>
+          <code class="cmd">qa reset-demo --deploy</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">Prerequisites: Docker Desktop running; app stack up (<code>qa app status</code> says healthy); local Claude Code logged in; GitHub CLI logged in for Scene 6. Full script: docs/DEMO.md.</div>
+</div>
+</body>
+</html>
