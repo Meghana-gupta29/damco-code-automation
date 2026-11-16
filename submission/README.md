@@ -73,5 +73,6 @@ Command reference:
 | `qa sabotage apply`, `qa app deploy` | demo: plant bugs on a branch and redeploy |
 | `qa feature apply --pr`, `qa pr-sync --pr N` | demo: developer PR, AI analyses impact and proposes new cases |
 | `qa email` | send the report (to Mailpit by default) |
+| `qa cleanup [--dry-run]` | delete leftover test users; also runs automatically at the end of every `qa run` |
 | `qa package` | copy run evidence into `submission/evidence/` |
 | `qa reset-demo [--deploy]` | return to the pre-recording state |

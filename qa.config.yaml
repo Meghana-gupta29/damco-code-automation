@@ -30,5 +30,12 @@ email:
   tls: false
   inbox_url: http://localhost:8025
 
+# Test users created by the generated tests are deleted at the end of every run.
+# Only emails matching these strict patterns are removed; superusers are never touched.
+cleanup:
+  test_user_email_patterns:
+    - '^(qa|ghost|login|user)_[0-9a-f]{12}@example\.com$'
+    - '^qaui_\d+_\d+@example\.com$'
+
 paths:
   runs_dir: runs

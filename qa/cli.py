@@ -105,6 +105,12 @@ def cmd_run(cfg, args):
         for r in rows:
             if r["outcome"] == "failed":
                 print(f"  FAIL {r['tc']} {r['test']}")
+    from .cleanup import cleanup_test_users
+    try:
+        matched, deleted = cleanup_test_users(cfg)
+        print(f"Cleanup: removed {deleted} leftover test user(s).")
+    except Exception as e:  # noqa: BLE001  (cleanup problems must never fail a run)
+        print(f"Cleanup skipped: {e}")
     if prev is not None:
         from .fixflow import carry_defects
         carry_defects(prev, run)  # defects whose tests now pass are closed; others stay open
@@ -150,6 +156,14 @@ def main():
     ap2 = sub.add_parser("app")
     ap2.add_argument("action", choices=["deploy", "status"])
     ap2.set_defaults(fn=lambda cfg, a: appctl.deploy(cfg) if a.action == "deploy" else appctl.status(cfg))
+    cl = sub.add_parser("cleanup", help="delete leftover test users (same cleanup that runs after every run)")
+    cl.add_argument("--dry-run", action="store_true", help="only count what would be deleted")
+
+    def _cleanup(cfg, a):
+        from .cleanup import cleanup_test_users
+        m, d = cleanup_test_users(cfg, dry_run=a.dry_run)
+        print(f"{'Would delete' if a.dry_run else 'Deleted'} {m if a.dry_run else d} test user(s).")
+    cl.set_defaults(fn=_cleanup)
     sub.add_parser("package", help="copy run evidence into submission/evidence").set_defaults(
         fn=lambda cfg, a: __import__("qa.package", fromlist=["x"]).package(cfg))
     fa = sub.add_parser("feature", help="play the developer: feature branch (+ real PR on the fork)")
