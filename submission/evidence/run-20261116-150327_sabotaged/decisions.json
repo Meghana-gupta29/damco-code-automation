@@ -1,0 +1,14 @@
+{
+  "DEF-001": {
+    "choice": "code",
+    "by": "bansa",
+    "ai_recommendation": "fix_code",
+    "at": "2026-11-16T15:08:15"
+  },
+  "DEF-002": {
+    "choice": "test",
+    "by": "bansa",
+    "ai_recommendation": "update_test",
+    "at": "2026-11-16T15:08:25"
+  }
+}

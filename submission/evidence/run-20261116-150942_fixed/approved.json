@@ -1,0 +1,15 @@
+{
+  "approver": "bansa",
+  "at": "2026-11-16T10:32:49",
+  "sha256": "82b73aa500d19a6ffab5298a659fc34a3ad22d05b0875e5434ded24ea75ba98a",
+  "amendments": [
+    {
+      "by": "bansa",
+      "at": "2026-11-16T15:09:25",
+      "note": "DEF-002: TC-005 now checks the new sign-up password boundaries: 9 chars is rejected, 10 and 128 are accepted, and 129 is rejected (all other tests are unchanged).",
+      "tcs": [
+        "TC-005"
+      ]
+    }
+  ]
+}

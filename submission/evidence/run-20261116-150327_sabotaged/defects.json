@@ -1,0 +1,77 @@
+[
+  {
+    "title": "Item list endpoint returns every user's items to non-superusers (data leak)",
+    "tcs": [
+      "TC-017",
+      "TC-043"
+    ],
+    "classification": "product_bug",
+    "recommendation": "fix_code",
+    "severity": "Sev1",
+    "confidence": "high",
+    "suspect_module": "backend/app/api/routes/items.py",
+    "suspect_detail": "read_items(), non-superuser else-branch: the `.where(Item.owner_id == current_user.id)` filter was removed from both the count statement and the item select statement",
+    "root_cause": "The diff deleted the owner_id filter in the non-superuser branch of GET /items/. That branch is now identical to the superuser branch, so any authenticated user gets all users' items and a global count.",
+    "rationale": "Both failures trace directly to the changed lines. TC-017 shows extra item IDs belonging to other users. TC-043 shows user B not getting the empty state because A's item is returned. Nothing suggests this is a deliberate rule change, since the page copy says 'Create and manage your items' and the single-item endpoints still enforce ownership with 403. This is a cross-tenant data exposure. The frontend is not at fault because it correctly renders whatever the API returns.",
+    "steps": [
+      "Create user A and user B (non-superusers)",
+      "As A, POST /api/v1/items/ twice; as B, POST once",
+      "As A, GET /api/v1/items/",
+      "Alternatively, in the UI log in as B, who has no items, and open /items"
+    ],
+    "expected": "A receives 200 with only A's 2 items and count=2. B sees the empty state 'You don't have any items yet'.",
+    "actual": "The response includes items owned by other users, and count covers all items in the table. B sees A's items instead of the empty state.",
+    "id": "DEF-001",
+    "status": "Fixed (pending verification)",
+    "run_id": "run-20261116-150327",
+    "regression_from": "aabb901",
+    "evidence": [
+      {
+        "tc": "TC-017",
+        "error": "api = <httpx.Client object at 0x0000020F8218D390>\nnew_user = <function new_user.<locals>._make at 0x0000020F8223AC00>\n\n    @pytest.mark.tc(\"TC-017\")\n    def test_tc_017_list_items_only_own(api, new_user):\n        a = new_user()\n        b = new_user()\n        a1 = _create(api, a[\"headers\"], \"a1\")\n        a2 = _create(api, a[\"headers\"], \"a2\")\n        b1 = _create(api, b[\"headers\"], \"b1\")\n        r = api.get(\"/items/\", headers=a[\"headers\"])\n        assert r.status_code == 200\n        body = r.json()\n        ids = {i[\"id\"] for i in body[\"data\"]}\n>       assert ids == {a1[\"id\"], a2[\"id\"]}\nE       AssertionError: assert {'09de5206-4c...8a63583e8d32'} == {'1f533129-03...b22bf9f2c32d'}\nE         \nE         Extra items in the left set:\nE         'e032caea-2ed1-4df5-ba01-8a63583e8d32'\nE         '246531fd-2c33-49d3-a09e-116bc59b89d2'\nE         '09de5206-4c22-456f-87aa-0a5bd078d956'\nE         '300793f9-dc31-4ad8-9748-841b12c2921d'\nE         Use -v to get more diff\n\ngenerated\\api\\test_items.py:71: AssertionError",
+        "attachments": []
+      },
+      {
+        "tc": "TC-043",
+        "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('You don\\'t have any items yet')\nExpected: visible\nTimeout: 7000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('You don\\'t have any items yet') with timeout 7000ms\u001b[22m\n\u001b[2m  - waiting for getByText('You don\\'t have any items yet')\u001b[22m\n",
+        "attachments": [
+          "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\qa-orchestrator\\runs\\run-20261116-150327\\ui-artifacts\\items-TC-043-Items-list-sh-5d698--the-logged-in-user-s-items-chromium\\test-failed-1.png",
+          "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\qa-orchestrator\\runs\\run-20261116-150327\\ui-artifacts\\items-TC-043-Items-list-sh-5d698--the-logged-in-user-s-items-chromium\\error-context.md",
+          "C:\\Users\\bansa\\OneDrive\\Desktop\\Damco assignment\\qa-orchestrator\\runs\\run-20261116-150327\\ui-artifacts\\items-TC-043-Items-list-sh-5d698--the-logged-in-user-s-items-chromium\\trace.zip"
+        ]
+      }
+    ],
+    "resolution": "fix code"
+  },
+  {
+    "title": "Sign-up minimum password length raised from 8 to 10; boundary test still expects 8",
+    "tcs": [
+      "TC-005"
+    ],
+    "classification": "test_issue",
+    "recommendation": "update_test",
+    "severity": "Sev3",
+    "confidence": "medium",
+    "suspect_module": "backend/app/models.py",
+    "suspect_detail": "UserRegister.password: Field(min_length=8 -> min_length=10, max_length=128)",
+    "root_cause": "UserRegister.password min_length was changed from 8 to 10, so POST /users/signup now returns 422 for an 8-character password. The test and plan still assume an 8-character minimum.",
+    "rationale": "Stricter password length looks like a deliberate security-policy change and not a defect, so the test is outdated. This is uncertain, because the change is only on UserRegister. UserCreate, UserUpdate, UpdatePassword and NewPassword still use min 8, and that inconsistency could be accidental. A human should confirm the intended policy. If 10 is intended, update TC-005 to use 10 and 128 as valid, 9 as invalid, and 129 as invalid, and decide whether the other schemas should follow. If it was unintended, revert the change.",
+    "steps": [
+      "POST /api/v1/users/signup with a unique email and an 8-character password"
+    ],
+    "expected": "200 (per the current plan and test).",
+    "actual": "422 Unprocessable Content, because the password is shorter than the new 10-character minimum.",
+    "id": "DEF-002",
+    "status": "Fixed (pending verification)",
+    "run_id": "run-20261116-150327",
+    "regression_from": "aabb901",
+    "evidence": [
+      {
+        "tc": "TC-005",
+        "error": "api = <httpx.Client object at 0x0000020F8218D390>\n\n    @pytest.mark.tc(\"TC-005\")\n    def test_tc_005_signup_password_boundaries(api):\n>       assert _signup(api, password=\"a\" * 8).status_code == 200\nE       AssertionError: assert 422 == 200\nE        +  where 422 = <Response [422 Unprocessable Content]>.status_code\nE        +    where <Response [422 Unprocessable Content]> = _signup(<httpx.Client object at 0x0000020F8218D390>, password=('a' * 8))\n\ngenerated\\api\\test_users.py:66: AssertionError",
+        "attachments": []
+      }
+    ],
+    "resolution": "update test"
+  }
+]

@@ -1,0 +1,79 @@
+{
+  "impact_summary": "GET /api/v1/items/ gains an optional case-insensitive `search` parameter that filters by title (icontains, autoescaped) and is combined with the existing owner filter. The previous separate superuser/non-superuser branches were refactored into a single shared filter list, with the count and the page both using the same filters. The Items page gets a search input (data-testid=item-search) that re-queries the API and shows 'No items match your search' when nothing matches. The refactor touches the owner-scoping logic, so there is some risk of a regression in access control.",
+  "risk": "medium",
+  "affected_modules": [
+    "backend/app/api/routes/items.py",
+    "frontend/src/routes/_layout/items.tsx",
+    "frontend/src/client/types.gen.ts"
+  ],
+  "cases_to_review": [
+    {
+      "tc": "TC-017",
+      "reason": "Owner scoping in read_items was refactored into a shared filter list. Confirm a user still sees only their own items, with and without `search`."
+    },
+    {
+      "tc": "TC-016",
+      "reason": "The list endpoint signature changed. Confirm it still requires authentication."
+    },
+    {
+      "tc": "TC-043",
+      "reason": "The Items page render path and query key changed (['items', search]). Confirm the list still shows only the logged-in user's items."
+    },
+    {
+      "tc": "TC-039",
+      "reason": "The query key changed, so the list refresh after a UI create may behave differently. Verify the new item still appears."
+    },
+    {
+      "tc": "TC-041",
+      "reason": "Edit relies on the items list refreshing under the new query key. Verify the edited title is shown."
+    },
+    {
+      "tc": "TC-042",
+      "reason": "Delete relies on the items list refreshing under the new query key. Verify the item disappears."
+    }
+  ],
+  "new_cases": [
+    {
+      "title": "Search items by title is case-insensitive and scoped to the caller's own items",
+      "layer": "API",
+      "type": "positive",
+      "priority": "P1",
+      "module": "backend/app/api/routes/items.py",
+      "steps": [
+        "Create two fresh normal users, A and B, and obtain a token for each",
+        "As A, create items titled 'Alpha-<uuid>-Report' and 'Beta-<uuid>-Notes'",
+        "As B, create an item titled 'alpha-<uuid>-Other' (same uuid token in the title, different case)",
+        "As A, call GET /api/v1/items/?search=ALPHA-<uuid> with A's token"
+      ],
+      "expected": "Status is 200. data contains exactly one item, A's 'Alpha-<uuid>-Report'. B's item is not returned despite matching the search, and A's 'Beta' item is excluded. count is 1, so the search is case-insensitive and still scoped to the owner.",
+      "id": "TC-050",
+      "origin": {
+        "pr": 1,
+        "title": "feat(items): search items by title",
+        "url": "https://github.com/Meghana-gupta29/damco-code-opensource/pull/1"
+      }
+    },
+    {
+      "title": "Items page search box filters the list and shows the no-match message",
+      "layer": "UI",
+      "type": "positive",
+      "priority": "P1",
+      "module": "frontend/src/routes/_layout/items.tsx",
+      "steps": [
+        "Create a fresh user through the API and log in through the UI",
+        "Create two items via the API with unique titles, 'Apple-<uuid>' and 'Banana-<uuid>'",
+        "Open the Items page",
+        "Type 'apple-<uuid>' into the input with data-testid='item-search'",
+        "Verify only the Apple row is visible and the Banana row is not",
+        "Clear the input and type 'nomatch-<uuid>'"
+      ],
+      "expected": "After the first search the table shows only 'Apple-<uuid>' and not 'Banana-<uuid>'. After the no-match search the page shows 'No items match your search' and 'Try a different search term'.",
+      "id": "TC-051",
+      "origin": {
+        "pr": 1,
+        "title": "feat(items): search items by title",
+        "url": "https://github.com/Meghana-gupta29/damco-code-opensource/pull/1"
+      }
+    }
+  ]
+}
