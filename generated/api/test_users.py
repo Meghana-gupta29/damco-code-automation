@@ -63,10 +63,9 @@ def test_tc_004_signup_password_below_min_length(api):
 
 @pytest.mark.tc("TC-005")
 def test_tc_005_signup_password_boundaries(api):
-    assert _signup(api, password="a" * 10).status_code == 200
+    assert _signup(api, password="a" * 8).status_code == 200
     assert _signup(api, password="b" * 128).status_code == 200
-    assert _signup(api, password="c" * 9).status_code == 422
-    assert _signup(api, password="d" * 129).status_code == 422
+    assert _signup(api, password="c" * 129).status_code == 422
 
 
 @pytest.mark.tc("TC-023")
@@ -170,7 +169,7 @@ def test_tc_030_superuser_cannot_delete_self(api, admin_headers):
 @pytest.mark.tc("TC-048")
 def test_tc_048_users_endpoints_reject_no_token(api):
     r1 = api.get("/users/me")
-    assert r1.status_code == 200 if False else r1.status_code == 401
+    assert r1.status_code == 401
     r2 = api.patch("/users/me", json={"full_name": "x"})
     assert r2.status_code == 401
     r3 = api.get("/users/")

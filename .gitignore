@@ -7,3 +7,12 @@ runs/*/trace/
 runs/*/ui-artifacts/
 runs/_last/
 test-results/
+
+# Demo output is never committed (use `qa package` -> submission/evidence instead)
+runs/*/*
+!runs/run-20261116-093132/approved.json
+!runs/run-20261116-093132/context.json
+!runs/run-20261116-093132/test_cases.json
+dashboard/
+generated/api/test_pr*_*.py
+generated/ui/pr*_*.spec.ts
