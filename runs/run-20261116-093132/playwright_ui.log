@@ -1,0 +1,22 @@
+
+Running 17 tests using 1 worker
+
+  ok  1 [chromium] › generated\ui\admin.spec.ts:10:5 › TC-047 Non-superuser cannot access admin page (1.1s)
+  ok  2 [chromium] › generated\ui\auth.spec.ts:10:5 › TC-031 Sign up via UI form (768ms)
+  ok  3 [chromium] › generated\ui\auth.spec.ts:25:5 › TC-032 Sign-up validation: mismatched passwords (606ms)
+  ok  4 [chromium] › generated\ui\auth.spec.ts:42:5 › TC-033 Sign-up validation: short password and invalid email (745ms)
+  ok  5 [chromium] › generated\ui\auth.spec.ts:64:5 › TC-034 Sign-up with an already registered email (822ms)
+  ok  6 [chromium] › generated\ui\auth.spec.ts:81:5 › TC-035 Login via UI with valid credentials (867ms)
+  ok  7 [chromium] › generated\ui\auth.spec.ts:99:5 › TC-036 Login via UI with wrong password (820ms)
+  ok  8 [chromium] › generated\ui\auth.spec.ts:116:5 › TC-037 Login form empty and invalid email validation (559ms)
+  ok  9 [chromium] › generated\ui\auth.spec.ts:134:5 › TC-038 Unauthenticated access to protected route redirects to login (513ms)
+  ok 10 [chromium] › generated\ui\items.spec.ts:20:5 › TC-039 Create item through the UI (1.7s)
+  ok 11 [chromium] › generated\ui\items.spec.ts:36:5 › TC-040 Item form requires title and enforces max length (1.8s)
+  ok 12 [chromium] › generated\ui\items.spec.ts:64:5 › TC-041 Edit item through the UI (2.6s)
+  ok 13 [chromium] › generated\ui\items.spec.ts:90:5 › TC-042 Delete item through the UI with confirmation (3.3s)
+  ok 14 [chromium] › generated\ui\items.spec.ts:126:5 › TC-043 Items list shows only the logged-in user's items (2.9s)
+  ok 15 [chromium] › generated\ui\settings.spec.ts:11:5 › TC-044 Update profile in settings (1.4s)
+  ok 16 [chromium] › generated\ui\settings.spec.ts:34:5 › TC-045 Change password in settings (2.1s)
+  ok 17 [chromium] › generated\ui\settings.spec.ts:56:5 › TC-046 Change password validation: mismatch and wrong current (1.5s)
+
+  17 passed (25.3s)

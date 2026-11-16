@@ -35,28 +35,31 @@ def cmd_approve(cfg, args):
 
 
 def cmd_generate(cfg, args):
-    from .generate import generate_api
+    from .generate import generate_api, generate_ui
     run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
     run.require_approved_plan()  # Gate 1 enforced in code
     cases = run.read_json("test_cases.json")
     if args.suite == "api":
         files = generate_api(get_provider(cfg), cfg, cases)
-        print("Wrote:")
-        for f in files:
-            print("  " + f)
+    else:
+        files = generate_ui(get_provider(cfg), cfg, cases)
+    print("Wrote:")
+    for f in files:
+        print("  " + f)
 
 
 def cmd_run(cfg, args):
-    from .runner import run_api
+    from .runner import run_api, run_ui
     run = Run.latest(cfg["_root"] / cfg["paths"]["runs_dir"])
     run.require_approved_plan()  # Gate 1 enforced in code
-    res = run_api(cfg, run)
-    rows = res["rows"]
-    n = lambda o: sum(r["outcome"] == o for r in rows)  # noqa: E731
-    print(f"API: {len(rows)} tests | passed {n('passed')} | failed {n('failed')} | skipped {n('skipped')}")
-    for r in rows:
-        if r["outcome"] == "failed":
-            print(f"  FAIL {r['tc']} {r['test']}")
+    suites = {"api": run_api, "ui": run_ui}
+    for name in ([args.suite] if args.suite else ["api", "ui"]):
+        rows = suites[name](cfg, run)["rows"]
+        n = lambda o: sum(r["outcome"] == o for r in rows)  # noqa: E731
+        print(f"{name.upper()}: {len(rows)} tests | passed {n('passed')} | failed {n('failed')} | skipped {n('skipped')}")
+        for r in rows:
+            if r["outcome"] == "failed":
+                print(f"  FAIL {r['tc']} {r['test']}")
 
 
 def main():
@@ -69,9 +72,11 @@ def main():
     ap.add_argument("what", choices=["plan"])
     ap.set_defaults(fn=cmd_approve)
     g = sub.add_parser("generate")
-    g.add_argument("suite", choices=["api"])
+    g.add_argument("suite", choices=["api", "ui"])
     g.set_defaults(fn=cmd_generate)
-    sub.add_parser("run").set_defaults(fn=cmd_run)
+    rp = sub.add_parser("run")
+    rp.add_argument("--suite", choices=["api", "ui"])
+    rp.set_defaults(fn=cmd_run)
     args = p.parse_args()
     args.fn(load_config(args.config), args)
 

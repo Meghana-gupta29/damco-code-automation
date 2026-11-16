@@ -45,3 +45,36 @@ def generate_api(llm: LLMProvider, cfg: dict, cases: list[dict]) -> list[str]:
     if missing:
         raise RuntimeError(f"Approved cases without a test: {sorted(missing)}")
     return written
+
+
+UI_SOURCE_GLOBS = ["frontend/src/routes/login.tsx", "frontend/src/routes/signup.tsx",
+                   "frontend/src/routes/_layout/*.tsx", "frontend/src/components/Items/*.tsx",
+                   "frontend/src/components/UserSettings/*.tsx", "frontend/src/components/Admin/*.tsx",
+                   "frontend/src/components/Common/UserMenu.tsx", "frontend/src/components/Common/Appearance.tsx"]
+UI_REFERENCE = ["frontend/tests/items.spec.ts", "frontend/tests/user-settings.spec.ts",
+                "frontend/tests/admin.spec.ts", "frontend/tests/utils/user.ts"]
+
+
+def generate_ui(llm: LLMProvider, cfg: dict, cases: list[dict]) -> list[str]:
+    repo = cfg["_target_repo"]
+    ui_cases = [c for c in cases if c["layer"] == "UI"]
+    files = []
+    for g in UI_SOURCE_GLOBS:
+        files += sorted(repo.glob(g))
+    src = "\n\n".join(f"### {p.relative_to(repo).as_posix()}\n{p.read_text(encoding='utf-8')}" for p in files)
+    ref = "\n\n".join(f"### {p}\n{(repo / p).read_text(encoding='utf-8')}" for p in UI_REFERENCE
+                      if (repo / p).exists())
+    task = (f"Write Playwright tests for these {len(ui_cases)} approved UI cases.\n\n"
+            f"## CASES\n{json.dumps(ui_cases, indent=1)}\n\n## FRONTEND SOURCE\n{src}\n\n"
+            f"## REFERENCE: template's own Playwright tests (selector idioms only)\n{ref}")
+    text = llm.run_agent("ui-tester", task, cfg["_root"])
+    written = _write_blocks(text, cfg["_root"], "generated/ui/")
+    ids = {c["id"] for c in ui_cases}
+    used = set()
+    for f in written:
+        used |= set(re.findall(r'test\(\s*["\x60\'](TC-\d+)', (cfg["_root"] / f).read_text(encoding="utf-8")))
+    if used - ids:
+        raise RuntimeError(f"Agent wrote UI tests for ids not in the approved plan: {sorted(used - ids)}")
+    if ids - used:
+        raise RuntimeError(f"Approved UI cases without a test: {sorted(ids - used)}")
+    return written
